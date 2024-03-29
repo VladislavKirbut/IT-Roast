@@ -157,13 +157,10 @@ public class UserServiceImpl implements UserService {
         return userMapper.toUserPageDto(user);
     }
     @Override
-    public void changePassword(UserUpdateDto userUpdateDto) {
-        User user = userRepository.findByAuthenticationInfoEmailAndIsDeletedFalse(userUpdateDto.getEmail())
+    public void resetPassword(ResetPasswordDto resetPasswordDto) {
+        User user = userRepository.findByAuthenticationInfoEmailAndIsDeletedFalse(resetPasswordDto.getEmail())
                 .orElseThrow(() -> new EntityNotFoundException("User could not be found"));
-
-
-        String toAdress = userUpdateDto.getEmail();
-
+        String toAdress = resetPasswordDto.getEmail();
         String newPassword = generator.generateRandomPassword(8);
         String encodedPassword = passwordEncoder.encodePassword(newPassword);
         user.getAuthenticationInfo().setUserPassword(encodedPassword);
@@ -172,15 +169,24 @@ public class UserServiceImpl implements UserService {
         emailService.sendNewPassword(toAdress, newPassword);
     }
 
+    @Override
+    public void changePassword(Long id,UserUpdateDto userUpdateDto) {
+        User user = userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("User could not be found"));
+
+        String newPassword = userUpdateDto.getPassword();
+        String encodedPassword = passwordEncoder.encodePassword(newPassword);
+        user.getAuthenticationInfo().setUserPassword(encodedPassword);
+
+        userRepository.saveAndFlush(user);
+    }
+
+
     private boolean isAuthorized(User user, UserDetails userDetails) {
         String userEmail = user.getAuthenticationInfo().getEmail();
         String username = userDetails.getUsername();
 
         return userEmail.equalsIgnoreCase(username);
     }
-
-
-
 }
 
 

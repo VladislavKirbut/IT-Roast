@@ -1,5 +1,6 @@
 package com.trainlab.controller;
 
+import com.trainlab.dto.ResetPasswordDto;
 import com.trainlab.dto.UserCreateDto;
 import com.trainlab.model.security.AuthRefreshToken;
 import com.trainlab.dto.AuthRequestDto;
@@ -106,4 +107,23 @@ public interface AuthenticationController {
     )
     ResponseEntity<HttpStatus> logout(@Valid @RequestBody AuthRefreshToken authRefreshToken,
                                       BindingResult bindingResult);
+
+
+    @Operation(
+            summary = "Reset the user's password when user forgot it",
+            description = "Reseting user password by using user's email",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "OK",
+                            description = "Password changed successfully",
+                            content = @Content(mediaType = "text/plain")
+                    ),
+                    @ApiResponse(
+                            responseCode = "NOT_FOUND",
+                            description = "User not found"
+                    )
+            }
+    )
+    ResponseEntity<String> resetPassword(@Valid @RequestBody ResetPasswordDto resetPasswordDto);
+
 }

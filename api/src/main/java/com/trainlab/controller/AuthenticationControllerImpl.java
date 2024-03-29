@@ -1,14 +1,11 @@
 package com.trainlab.controller;
 
-import com.trainlab.dto.UserCreateDto;
-import com.trainlab.dto.UserDto;
-import com.trainlab.dto.UserPageDto;
+import com.trainlab.dto.*;
 import com.trainlab.exception.LoginValidationException;
 import com.trainlab.exception.ValidationException;
 import com.trainlab.mapper.UserMapper;
 import com.trainlab.model.User;
 import com.trainlab.model.security.RefreshToken;
-import com.trainlab.dto.AuthRequestDto;
 import com.trainlab.security.dto.AuthResponseDto;
 import com.trainlab.security.TokenProvider;
 import com.trainlab.model.security.AuthRefreshToken;
@@ -23,10 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Objects;
 
@@ -106,6 +100,13 @@ public class AuthenticationControllerImpl implements AuthenticationController {
                             .userPageDto(user)
                             .build()
             );
+    }
+
+    @Override
+    @PutMapping("/reset-password")
+    public ResponseEntity<String> resetPassword(@Valid @RequestBody ResetPasswordDto resetPasswordDto) {
+        userService.resetPassword(resetPasswordDto);
+        return ResponseEntity.status(HttpStatus.OK).body("You changed password");
     }
 
     @PostMapping("/logout")

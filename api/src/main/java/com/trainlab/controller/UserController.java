@@ -126,7 +126,7 @@ public interface UserController {
                     )
             }
     )
-    ResponseEntity<String> changePassword(@Valid @RequestBody UserUpdateDto userUpdateDto);
+    ResponseEntity<String> changePassword(@Valid @PathVariable Long userId, @RequestBody UserUpdateDto userUpdateDto);
 
 
 }

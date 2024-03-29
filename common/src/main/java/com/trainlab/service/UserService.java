@@ -20,5 +20,6 @@ public interface UserService {
 
     User findUserByAuthenticationInfo(AuthRequestDto authRequestDto);
 
-    void changePassword(UserUpdateDto userUpdateDto);
+    void resetPassword(ResetPasswordDto resetPasswordDto);
+    void changePassword(Long userId, UserUpdateDto userUpdateDto);
 }
