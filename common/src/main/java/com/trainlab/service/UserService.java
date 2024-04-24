@@ -22,4 +22,5 @@ public interface UserService {
 
     void resetPassword(ResetPasswordDto resetPasswordDto);
     void changePassword(Long userId, UserUpdateDto userUpdateDto);
+    UserStatsDTO getAllUserStats(Long userId);
 }

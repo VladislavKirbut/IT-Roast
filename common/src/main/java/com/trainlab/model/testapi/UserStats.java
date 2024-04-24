@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Entity
 @Table(name = "user_stats", schema = "public")
-public class UserStats {
+public class UserStats { //для общей прожарки по специальностям у юзера
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
@@ -42,3 +42,5 @@ public class UserStats {
     @Column(name =  "test_count")
     private  int testCount;
 }
+
+

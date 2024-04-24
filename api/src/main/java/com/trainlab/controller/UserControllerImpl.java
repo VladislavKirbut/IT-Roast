@@ -1,12 +1,10 @@
 package com.trainlab.controller;
 
-import com.trainlab.dto.UserDto;
-import com.trainlab.dto.UserPageDto;
-import com.trainlab.dto.UserPageUpdateDto;
-import com.trainlab.dto.UserUpdateDto;
+import com.trainlab.dto.*;
 import com.trainlab.exception.*;
 import com.trainlab.mapper.UserMapper;
 import com.trainlab.model.User;
+import com.trainlab.model.testapi.UserStats;
 import com.trainlab.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -65,4 +63,20 @@ public class UserControllerImpl implements UserController {
         }
         return ResponseEntity.ok(userService.update(userUpdateDto, id));
     }
+
+    //UserSTats part
+
+    //  todo ДЛЯ СТРАНИЦЫ СТАТЫ тут будет лист юзерТестРезалтов
+    // todo  эедпоинт для СТРАНИЦЫ СТАТЫ тут будет лист юзерСтатов с прожарко для юзера
+
+
+
+    @GetMapping("/stats/{userId}")
+    public  ResponseEntity<UserStatsDTO> getAllUserStats(@PathVariable Long userId){
+
+        return ResponseEntity.ok(userService.getAllUserStats(userId));
+    }
+
+
+
 }

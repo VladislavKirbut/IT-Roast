@@ -18,6 +18,7 @@ import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -153,18 +154,28 @@ public class TestServiceImpl implements TestService {
         return Optional.ofNullable(test.getQuestions().get(questionNum - 1));
     }
 
-    public  UserTestResult processResult(Long testId, Map<Long, Long> results, long time, long userId) {
-        Test test = testRepository.findById(testId).orElseThrow();
+    public  TestSubmitedDTO processResult(Long testId, Map<Long, Long> results, long time, long userId) {
+        Test test = testRepository.findById(testId).orElseThrow(() -> new EntityNotFoundException("Test not be found"));
         User user = userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("User could not be found"));
 
         int correctAnswers = 0;
-        for(Answer answer: test.getRightAnswers()){
-            long questionId = answer.getQuestion().getId();
-            long userAnswerId =answer.getId();
+//        for(Answer answer: test.getRightAnswers()){
+//            long questionId = answer.getQuestion().getId();
+//            long userAnswerId = answer.getId();
+//            if(results.get(questionId) != null && results.get(questionId) == userAnswerId )
+//                correctAnswers++;
+//        }
 
-            if(results.get(questionId) != null && results.get(questionId) == userAnswerId )
+        //test version using question NUM
+        // result = номер вопроса + номер ответа -> проверяем на совпадение
+        // question = правильные ответы для теста парсим
+        for(Answer answer: test.getRightAnswers()){
+            long questionNum = answer.getQuestion().getQuestionNum();
+            long userAnswerNum = answer.getAnswerNum();
+            if(results.get(questionNum) != null && results.get(questionNum) == userAnswerNum )
                 correctAnswers++;
         }
+        ///
 
         int size = test.getRightAnswers().size();
         int percentage = (correctAnswers * 100) / size;
@@ -177,7 +188,9 @@ public class TestServiceImpl implements TestService {
                 .score(percentage)
                 .level(lvl)
                 .completeTime(time)
+                .date(LocalDate.now())
                 .build();
+        //добавить дату
 
         UserStats userStats =  userStatsRepository.findByUserAndAndSpecialty(user,test.getSpecialty());
         if(userStats == null){
@@ -203,7 +216,12 @@ public class TestServiceImpl implements TestService {
 
         userStatsRepository.save(userStats);
         userTestResultRepository.save(userTestResult);
-        return userTestResult;
+
+        return TestSubmitedDTO.builder()
+                .score(userTestResult.getScore())
+                .level(userTestResult.getLevel())
+                .specialty(test.getSpecialty())
+                .build();
     }
 
     private static eUserLevel geteUserLevel(int percentage) {

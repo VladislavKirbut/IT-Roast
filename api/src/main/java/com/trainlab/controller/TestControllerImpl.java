@@ -72,9 +72,9 @@ public class TestControllerImpl implements TestController {
 
     @Override
     @PostMapping("/submit/{testId}")
-    public ResponseEntity<Integer> submitQuiz(@PathVariable Long testId, @RequestBody SubmitDTO submitDTO) {
-       UserTestResult userTestResult = testService.processResult(testId,submitDTO.getResults(),submitDTO.getTime(),submitDTO.getUserId());
-        return ResponseEntity.ok(userTestResult.getScore());
+    public ResponseEntity<TestSubmitedDTO> submitQuiz(@PathVariable Long testId, @RequestBody SubmitDTO submitDTO) {
+       TestSubmitedDTO testSubmitedDTO = testService.processResult(testId,submitDTO.getResults(),submitDTO.getTime(),submitDTO.getUserId());
+        return ResponseEntity.ok(testSubmitedDTO);
     }
 
     @Override

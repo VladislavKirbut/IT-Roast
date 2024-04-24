@@ -16,7 +16,8 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @Entity
 @Table(name = "user_test_result", schema = "public")
-public class UserTestResult {
+public class UserTestResult { //для статы после теста и графиков
+    // мб надо будет кешировать для юзера каждого ...
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
@@ -47,3 +48,5 @@ public class UserTestResult {
     @Column(name = "level")
     private eUserLevel level;
 }
+
+//todo дтошки 2) для графиков
