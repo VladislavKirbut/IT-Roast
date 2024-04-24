@@ -7,8 +7,12 @@ import com.trainlab.exception.ObjectNotFoundException;
 import com.trainlab.mapper.UserMapper;
 import com.trainlab.model.Role;
 import com.trainlab.model.User;
+import com.trainlab.model.testapi.UserStats;
+import com.trainlab.model.testapi.UserTestResult;
 import com.trainlab.repository.RoleRepository;
 import com.trainlab.repository.UserRepository;
+import com.trainlab.repository.UserStatsRepository;
+import com.trainlab.repository.UserTestResultRepository;
 import com.trainlab.service.EmailService;
 import com.trainlab.service.UserService;
 import com.trainlab.util.UsernameGenerator;
@@ -18,12 +22,14 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -38,6 +44,8 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final EmailService emailService;
+    private final UserStatsRepository userStatsRepository;
+    private final UserTestResultRepository userTestResultRepository;
 
     @Override
     public User create(UserCreateDto userCreateDto) {
@@ -157,13 +165,10 @@ public class UserServiceImpl implements UserService {
         return userMapper.toUserPageDto(user);
     }
     @Override
-    public void changePassword(UserUpdateDto userUpdateDto) {
-        User user = userRepository.findByAuthenticationInfoEmailAndIsDeletedFalse(userUpdateDto.getEmail())
+    public void resetPassword(ResetPasswordDto resetPasswordDto) {
+        User user = userRepository.findByAuthenticationInfoEmailAndIsDeletedFalse(resetPasswordDto.getEmail())
                 .orElseThrow(() -> new EntityNotFoundException("User could not be found"));
-
-
-        String toAdress = userUpdateDto.getEmail();
-
+        String toAdress = resetPasswordDto.getEmail();
         String newPassword = generator.generateRandomPassword(8);
         String encodedPassword = passwordEncoder.encodePassword(newPassword);
         user.getAuthenticationInfo().setUserPassword(encodedPassword);
@@ -172,6 +177,18 @@ public class UserServiceImpl implements UserService {
         emailService.sendNewPassword(toAdress, newPassword);
     }
 
+    @Override
+    public void changePassword(Long id,UserUpdateDto userUpdateDto) {
+        User user = userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("User could not be found"));
+
+        String newPassword = userUpdateDto.getPassword();
+        String encodedPassword = passwordEncoder.encodePassword(newPassword);
+        user.getAuthenticationInfo().setUserPassword(encodedPassword);
+
+        userRepository.saveAndFlush(user);
+    }
+
+
     private boolean isAuthorized(User user, UserDetails userDetails) {
         String userEmail = user.getAuthenticationInfo().getEmail();
         String username = userDetails.getUsername();
@@ -179,8 +196,41 @@ public class UserServiceImpl implements UserService {
         return userEmail.equalsIgnoreCase(username);
     }
 
+    // user stats
 
+    public UserStatsDTO getAllUserStats(Long userId){
+        //найти юзера, найти все статы его отдать МАПУ?!?
+        // <спецуха,счет>
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User could not be found"));
 
+        List<UserStats> stats = userStatsRepository.findByUser(user);
+        List<UserTestResult> results
+                = userTestResultRepository.findAllByUser(user);
+        return UserStatsDTO.builder()
+                .name(user.getUsername())
+                .stats(
+                        stats.stream()
+                                .map(userStats ->
+                                        UserStatsHeaderDTO.builder()
+                                                .userLevel(userStats.getLevel())
+                                                .specialty(userStats.getSpecialty())
+                                                .build())
+                                .collect(Collectors.toList())
+                )
+                .results(results.stream()
+                        .map(userTestResult -> UserTestResultDTO.builder()
+                                .specialty(userTestResult.getTest().getSpecialty())
+                                .score(userTestResult.getScore())
+                                .date(userTestResult.getDate())
+                                .userLevel(userTestResult.getLevel())
+                                .build()
+                        )
+                        .collect(Collectors.toList())
+                )
+                .build();
+
+    }
 }
 
 

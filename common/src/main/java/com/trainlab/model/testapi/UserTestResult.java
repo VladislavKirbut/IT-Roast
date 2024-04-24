@@ -1,11 +1,14 @@
 package com.trainlab.model.testapi;
 
+import com.trainlab.Enum.eSpecialty;
+import com.trainlab.Enum.eUserLevel;
 import com.trainlab.model.User;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.sql.Timestamp;
 import java.time.Duration;
+import java.time.LocalDate;
 
 @Data
 @Builder
@@ -13,7 +16,8 @@ import java.time.Duration;
 @NoArgsConstructor
 @Entity
 @Table(name = "user_test_result", schema = "public")
-public class UserTestResult {
+public class UserTestResult { //для статы после теста и графиков
+    // мб надо будет кешировать для юзера каждого ...
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
@@ -32,4 +36,17 @@ public class UserTestResult {
 
     @Column(name = "complete_time")
     private Long completeTime;
+
+    // сделать миграцию
+
+    //дата
+    @Column(name = "date")
+    private LocalDate date;
+
+    //прожарка
+    @Enumerated(EnumType.STRING)
+    @Column(name = "level")
+    private eUserLevel level;
 }
+
+//todo дтошки 2) для графиков

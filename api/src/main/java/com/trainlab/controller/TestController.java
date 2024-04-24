@@ -207,7 +207,7 @@ public interface TestController {
                     )
             }
     )
-    ResponseEntity<Integer> submitQuiz(@PathVariable Long testId, @RequestBody SubmitDTO submitDTO);
+    ResponseEntity<TestSubmitedDTO> submitQuiz(@PathVariable Long testId, @RequestBody SubmitDTO submitDTO);
 
     @Operation(
             summary = "Delete test",

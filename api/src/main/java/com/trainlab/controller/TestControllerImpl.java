@@ -2,12 +2,14 @@ package com.trainlab.controller;
 
 import com.trainlab.Enum.eSpecialty;
 import com.trainlab.dto.*;
+import com.trainlab.exception.LoginValidationException;
 import com.trainlab.model.testapi.UserTestResult;
 import com.trainlab.service.TestService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -70,9 +72,9 @@ public class TestControllerImpl implements TestController {
 
     @Override
     @PostMapping("/submit/{testId}")
-    public ResponseEntity<Integer> submitQuiz(@PathVariable Long testId, @RequestBody SubmitDTO submitDTO) {
-       UserTestResult userTestResult = testService.processResult(testId,submitDTO.getResults(),submitDTO.getTime(),submitDTO.getUserId());
-        return ResponseEntity.ok(userTestResult.getScore());
+    public ResponseEntity<TestSubmitedDTO> submitQuiz(@PathVariable Long testId, @RequestBody SubmitDTO submitDTO) {
+       TestSubmitedDTO testSubmitedDTO = testService.processResult(testId,submitDTO.getResults(),submitDTO.getTime(),submitDTO.getUserId());
+        return ResponseEntity.ok(testSubmitedDTO);
     }
 
     @Override

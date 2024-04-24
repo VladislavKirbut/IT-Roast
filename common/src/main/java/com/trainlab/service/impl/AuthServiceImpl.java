@@ -2,6 +2,7 @@ package com.trainlab.service.impl;
 
 import com.trainlab.dto.UserDto;
 import com.trainlab.dto.UserPageDto;
+import com.trainlab.dto.UserUpdateDto;
 import com.trainlab.exception.RefreshTokenNotFoundException;
 import com.trainlab.exception.TokenExpiredException;
 import com.trainlab.mapper.UserMapper;
@@ -10,7 +11,12 @@ import com.trainlab.model.User;
 import com.trainlab.model.security.AuthRefreshToken;
 import com.trainlab.model.security.RefreshToken;
 import com.trainlab.repository.AuthRepository;
+import com.trainlab.repository.UserRepository;
 import com.trainlab.service.AuthService;
+import com.trainlab.service.EmailService;
+import com.trainlab.util.RandomValuesGenerator;
+import com.trainlab.util.password.CustomPasswordEncoder;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,7 +30,6 @@ import java.util.UUID;
 public class AuthServiceImpl implements AuthService {
 
     private final UserMapper userMapper;
-
     private final AuthRepository authRepository;
 
     @Override
@@ -60,4 +65,5 @@ public class AuthServiceImpl implements AuthService {
 
         authRepository.delete(refreshSession);
     }
+
 }
