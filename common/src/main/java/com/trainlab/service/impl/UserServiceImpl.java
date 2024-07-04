@@ -165,13 +165,13 @@ public class UserServiceImpl implements UserService {
     public void resetPassword(ResetPasswordDto resetPasswordDto) {
         User user = userRepository.findByAuthenticationInfoEmailAndIsDeletedFalse(resetPasswordDto.getEmail())
                 .orElseThrow(() -> new EntityNotFoundException("User could not be found"));
-        String toAdress = resetPasswordDto.getEmail();
+        String toAddress = resetPasswordDto.getEmail();
         String newPassword = generator.generateRandomPassword(8);
         String encodedPassword = passwordEncoder.encodePassword(newPassword);
         user.getAuthenticationInfo().setUserPassword(encodedPassword);
 
         userRepository.saveAndFlush(user);
-        emailService.sendNewPassword(toAdress, newPassword);
+        emailService.sendNewPassword(toAddress, newPassword);
     }
 
     @Override
