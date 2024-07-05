@@ -11,13 +11,13 @@ import org.springframework.stereotype.Service;
 public class EmailServiceImpl implements EmailService {
 
     public final JavaMailSender emailSender;
-    private final SimpleMailMessage simpleMailMessage = new SimpleMailMessage();
+    private final SimpleMailMessage mailMessage = new SimpleMailMessage();
 
-    public void sendEmail(String address, String subject, String message){
-        simpleMailMessage.setTo(address);
-        simpleMailMessage.setSubject(subject);
-        simpleMailMessage.setText(message);
-        emailSender.send(simpleMailMessage);
+    private void sendEmail(String address, String subject, String message){
+        mailMessage.setTo(address);
+        mailMessage.setSubject(subject);
+        mailMessage.setText(message);
+        emailSender.send(mailMessage);
     }
 
     @Override
@@ -33,7 +33,7 @@ public class EmailServiceImpl implements EmailService {
     @Override
     public void sendNewPassword(String toAddress, String newPassword) {
         String emailSubject = "Вы забыли пароль";
-        String message = "Вы захотели изменить пароль, потому что старый забыли.\n" +
+        String message = "Вы захотели изменить пароль, потому что забыли старый.\n" +
                 "Вот ваш новый пароль, пожалуйста, не забывайте!\n" + newPassword +
                 "\nС наилучшими пожеланиями,\nКоманда Trainlab";
 
