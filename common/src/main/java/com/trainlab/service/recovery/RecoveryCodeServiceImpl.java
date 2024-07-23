@@ -4,23 +4,24 @@ import com.trainlab.dto.UserPageDto;
 import com.trainlab.dto.recovery.EmailRequestDto;
 import com.trainlab.dto.recovery.RecoveryCodeDto;
 import com.trainlab.exception.recovery.IllegalRecoveryCodeException;
+import com.trainlab.exception.recovery.RateLimitExceededException;
 import com.trainlab.exception.recovery.RecoveryCodeExpiredException;
 import com.trainlab.mapper.UserMapper;
 import com.trainlab.model.User;
 import com.trainlab.model.recovery.RecoveryCode;
 import com.trainlab.repository.RecoveryCodeRepository;
 import com.trainlab.repository.UserRepository;
-import com.trainlab.service.EmailService;
+import com.trainlab.service.email.EmailService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.Random;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import java.util.random.RandomGenerator;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -30,7 +31,6 @@ public class RecoveryCodeServiceImpl implements RecoveryCodeService {
     private final RecoveryCodeRepository recoveryCodeRepository;
     private final UserRepository userRepository;
     private final EmailService emailService;
-
     private final UserMapper userMapper;
 
     @Override
@@ -38,28 +38,35 @@ public class RecoveryCodeServiceImpl implements RecoveryCodeService {
         User user = userRepository.findByAuthenticationInfoEmailAndIsDeletedFalse(emailRequestDto.getEmail())
                 .orElseThrow(() -> new EntityNotFoundException("User could not be found"));
 
-        String toAddress = user.getAuthenticationInfo().getEmail();
-        String code = RandomStringUtils.randomNumeric(10);
+        Optional<RecoveryCode> code = recoveryCodeRepository.findRecoveryCodeByUser(user);
+        if (code.isPresent()) {
+            RecoveryCode oldRecoveryCode = code.get();
 
-        RecoveryCode recoveryCode = RecoveryCode.builder()
-                .code(code)
-                .expiredAt(Instant.now().plusSeconds(TimeUnit.MINUTES.toSeconds(CODE_TIME_TO_LIVE)))
-                .build();
-        recoveryCode.setUser(user);
+            boolean isExpired = oldRecoveryCode
+                    .getExpiredAt()
+                    .isBefore(Instant.now());
 
-        recoveryCodeRepository.saveAndFlush(recoveryCode);
-        emailService.sendNewPassword(toAddress, code);
+            if (isExpired) {
+                recoveryCodeRepository.delete(oldRecoveryCode);
+                createAndSendRecoveryCode(user);
+            } else {
+                LocalTime localTime = getTimeUntilNextRequest(oldRecoveryCode.getExpiredAt());
+                String timeUntilNextRequest = String.format("%s:%s", localTime.getMinute(), localTime.getSecond());
+                throw new RateLimitExceededException("Too many code recovery requests. Please, check under" + timeUntilNextRequest);
+            }
+        } else
+            createAndSendRecoveryCode(user);
     }
 
     @Override
-    public UserPageDto verifyCode(RecoveryCodeDto recoveryCodeDto) {
-        User user = userRepository.findByAuthenticationInfoEmail(recoveryCodeDto.getEmail())
-                .orElseThrow(() -> new EntityNotFoundException("User could not be found"));
+    public UserPageDto verifyCode(RecoveryCodeDto requestRecoveryCode) {
+        User user = userRepository.findByAuthenticationInfoEmail(requestRecoveryCode.getEmail())
+                .orElseThrow(() -> new EntityNotFoundException("User couldn't be found"));
 
-        RecoveryCode recoveryCode = recoveryCodeRepository.findRecoveryCodeByUser(user);
+        RecoveryCode recoveryCode = recoveryCodeRepository.findRecoveryCodeByUser(user)
+                .orElseThrow(() -> new IllegalRecoveryCodeException("Recovery code couldn't be found"));
 
-        // Подумать над проверкой на null
-        if (recoveryCode == null || !recoveryCode.getCode().equals(recoveryCodeDto.getCode()))
+        if (!recoveryCode.getCode().equals(requestRecoveryCode.getCode()))
             throw new IllegalRecoveryCodeException("Illegal recovery code");
 
         if (recoveryCode.getExpiredAt().isBefore(Instant.now())) {
@@ -70,5 +77,27 @@ public class RecoveryCodeServiceImpl implements RecoveryCodeService {
         recoveryCodeRepository.delete(recoveryCode);
 
         return userMapper.toUserPageDto(user);
+    }
+
+    private void createAndSendRecoveryCode(User user) {
+        String toAddress = user.getAuthenticationInfo().getEmail();
+        String randomCode = RandomStringUtils.randomNumeric(10);
+
+        RecoveryCode recoveryCode = RecoveryCode.builder()
+                .code(randomCode)
+                .expiredAt(Instant.now().plusSeconds(TimeUnit.MINUTES.toSeconds(CODE_TIME_TO_LIVE)))
+                .build();
+        recoveryCode.setUser(user);
+
+        recoveryCodeRepository.saveAndFlush(recoveryCode);
+        emailService.sendNewPassword(toAddress, randomCode);
+    }
+
+    private LocalTime getTimeUntilNextRequest(Instant expiredAt) {
+        Instant timeUntilExpiration = expiredAt
+                .minusMillis(Instant.now().toEpochMilli());
+        return timeUntilExpiration
+                .atZone(ZoneId.systemDefault())
+                .toLocalTime();
     }
 }
