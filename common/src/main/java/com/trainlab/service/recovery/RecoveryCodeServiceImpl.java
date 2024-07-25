@@ -44,15 +44,14 @@ public class RecoveryCodeServiceImpl implements RecoveryCodeService {
             boolean isExpired = oldRecoveryCode
                     .getExpiredAt()
                     .isBefore(OffsetDateTime.now(ZoneId.of("Europe/Minsk")));
-            System.out.println(OffsetDateTime.now(ZoneId.of("Europe/Minsk")));
-            System.out.println(oldRecoveryCode.getExpiredAt());
+
             if (isExpired) {
                 recoveryCodeRepository.delete(oldRecoveryCode);
                 createAndSendRecoveryCode(user);
             } else {
                 LocalTime localTime = getTimeUntilNextRequest(oldRecoveryCode.getExpiredAt());
                 String timeUntilNextRequest = String.format("%s:%s", localTime.getMinute(), localTime.getSecond());
-                throw new RateLimitExceededException("Too many code recovery requests. Please, check under " + timeUntilNextRequest);
+                throw new RateLimitExceededException("You have exceeded the rate limit. Please try again in " + timeUntilNextRequest);
             }
         } else
             createAndSendRecoveryCode(user);

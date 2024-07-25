@@ -1,5 +1,7 @@
 package com.trainlab.exception;
 
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -12,6 +14,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @RestControllerAdvice
+@Order(Ordered.HIGHEST_PRECEDENCE)
 public class MainExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(ObjectNotFoundException.class)
@@ -82,18 +85,4 @@ public class MainExceptionHandler extends ResponseEntityExceptionHandler {
 
         return ResponseEntityBuilder.build(apiError);
     }
-
-    @ExceptionHandler({Exception.class})
-    public ResponseEntity<Object> handleAll(
-            Exception ex) {
-        List<String> details = new ArrayList<>();
-        details.add(Arrays.toString(ex.getStackTrace()));
-        ApiError err = new ApiError(
-                LocalDateTime.now(),
-                HttpStatus.BAD_REQUEST,
-                ex.getMessage(),
-                details);
-        return ResponseEntityBuilder.build(err);
-    }
-
 }
