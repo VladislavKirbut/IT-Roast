@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.concurrent.TimeUnit;
 
 @Data
@@ -26,10 +28,10 @@ public class RecoveryCode {
 
     @Column(name = "created_at", nullable = false)
     @Builder.Default
-    private Instant createdAt = Instant.now();
+    private OffsetDateTime createdAt = OffsetDateTime.now(ZoneId.of("Europe/Minsk"));
 
     @Column(name = "expired_at", nullable = false)
-    private Instant expiredAt;
+    private OffsetDateTime expiredAt;
     @OneToOne
     @JoinColumn(name = "user_id")
     private User user;

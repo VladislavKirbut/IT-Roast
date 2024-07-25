@@ -1,4 +1,4 @@
-package com.trainlab.repository;
+package com.trainlab.repository.recovery;
 
 import com.trainlab.model.User;
 import com.trainlab.model.recovery.RecoveryCode;

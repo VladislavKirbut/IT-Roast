@@ -9,7 +9,7 @@ import com.trainlab.exception.recovery.RecoveryCodeExpiredException;
 import com.trainlab.mapper.UserMapper;
 import com.trainlab.model.User;
 import com.trainlab.model.recovery.RecoveryCode;
-import com.trainlab.repository.RecoveryCodeRepository;
+import com.trainlab.repository.recovery.RecoveryCodeRepository;
 import com.trainlab.repository.UserRepository;
 import com.trainlab.service.email.EmailService;
 import jakarta.persistence.EntityNotFoundException;
@@ -17,11 +17,10 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
 import java.time.LocalTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -44,15 +43,16 @@ public class RecoveryCodeServiceImpl implements RecoveryCodeService {
 
             boolean isExpired = oldRecoveryCode
                     .getExpiredAt()
-                    .isBefore(Instant.now());
-
+                    .isBefore(OffsetDateTime.now(ZoneId.of("Europe/Minsk")));
+            System.out.println(OffsetDateTime.now(ZoneId.of("Europe/Minsk")));
+            System.out.println(oldRecoveryCode.getExpiredAt());
             if (isExpired) {
                 recoveryCodeRepository.delete(oldRecoveryCode);
                 createAndSendRecoveryCode(user);
             } else {
                 LocalTime localTime = getTimeUntilNextRequest(oldRecoveryCode.getExpiredAt());
                 String timeUntilNextRequest = String.format("%s:%s", localTime.getMinute(), localTime.getSecond());
-                throw new RateLimitExceededException("Too many code recovery requests. Please, check under" + timeUntilNextRequest);
+                throw new RateLimitExceededException("Too many code recovery requests. Please, check under " + timeUntilNextRequest);
             }
         } else
             createAndSendRecoveryCode(user);
@@ -69,7 +69,7 @@ public class RecoveryCodeServiceImpl implements RecoveryCodeService {
         if (!recoveryCode.getCode().equals(requestRecoveryCode.getCode()))
             throw new IllegalRecoveryCodeException("Illegal recovery code");
 
-        if (recoveryCode.getExpiredAt().isBefore(Instant.now())) {
+        if (recoveryCode.getExpiredAt().isBefore(OffsetDateTime.now(ZoneId.of("Europe/Minsk")))){
             recoveryCodeRepository.delete(recoveryCode);
             throw new RecoveryCodeExpiredException("Recovery code has expired");
         }
@@ -85,7 +85,7 @@ public class RecoveryCodeServiceImpl implements RecoveryCodeService {
 
         RecoveryCode recoveryCode = RecoveryCode.builder()
                 .code(randomCode)
-                .expiredAt(Instant.now().plusSeconds(TimeUnit.MINUTES.toSeconds(CODE_TIME_TO_LIVE)))
+                .expiredAt(OffsetDateTime.now(ZoneId.of("Europe/Minsk")).plusMinutes(CODE_TIME_TO_LIVE))
                 .build();
         recoveryCode.setUser(user);
 
@@ -93,11 +93,9 @@ public class RecoveryCodeServiceImpl implements RecoveryCodeService {
         emailService.sendNewPassword(toAddress, randomCode);
     }
 
-    private LocalTime getTimeUntilNextRequest(Instant expiredAt) {
-        Instant timeUntilExpiration = expiredAt
-                .minusMillis(Instant.now().toEpochMilli());
-        return timeUntilExpiration
-                .atZone(ZoneId.systemDefault())
-                .toLocalTime();
+    private LocalTime getTimeUntilNextRequest(OffsetDateTime expiredAt) {
+        OffsetDateTime timeUntilExpiration = expiredAt
+                .minusSeconds(OffsetDateTime.now(ZoneId.of("Europe/Minsk")).toEpochSecond());
+        return timeUntilExpiration.toLocalTime();
     }
 }

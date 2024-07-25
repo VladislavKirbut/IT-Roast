@@ -10,6 +10,7 @@ import com.trainlab.model.User;
 import com.trainlab.model.testapi.UserStats;
 import com.trainlab.model.testapi.UserTestResult;
 import com.trainlab.repository.*;
+import com.trainlab.repository.recovery.RecoveryCodeRepository;
 import com.trainlab.service.email.EmailService;
 import com.trainlab.service.UserService;
 import com.trainlab.util.UsernameGenerator;
