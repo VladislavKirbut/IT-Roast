@@ -13,6 +13,7 @@ import com.trainlab.repository.recovery.RecoveryCodeRepository;
 import com.trainlab.repository.UserRepository;
 import com.trainlab.service.email.EmailService;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.ManyToOne;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.stereotype.Service;
